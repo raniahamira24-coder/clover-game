@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Clover Game Enhanced</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Quicksand:wght@400;600&family=Pacifico&display=swap');
+  
+  body {
+    font-family: 'Quicksand', sans-serif;
+    background: linear-gradient(180deg, #0c2f1f, #1f5e42);
+    animation: backgroundPulse 10s ease-in-out infinite alternate;
+    color: #eafff2;
+    margin: 0;
+    padding: 20px;
+    text-align: center;
+    overflow-x: hidden;
+    position: relative;
+    height: 100vh;
+  }
+  @keyframes backgroundPulse {
+    0% { background: linear-gradient(180deg, #0c2f1f, #1f5e42); }
+    50% { background: linear-gradient(180deg, #1f5e30, #2a7a54); }
+    100% { background: linear-gradient(180deg, #0c2f1f, #1f5e42); }
+  }
+  h1 {
+    font-family: 'Pacifico', cursive;
+    font-size: 40px;
+    margin-bottom: 20px;
+    position: relative;
+    z-index: 10;
+    text-shadow: 1px 1px 5px #0c2f1f;
+  }
+  .screen {
+    display: none;
+    position: relative;
+    z-index: 10;
+  }
+  .screen.active {
+    display: block;
+  }
+  .cards {
+    display: grid;
+    grid-template-columns: 1fr;
+    max-width: 320px;
+    margin: 0 auto;
+    gap: 20px;
+  }
+  .card {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 25px;
+    padding: 22px;
+    font-size: 26px;
+    cursor: pointer;
+    user-select: none;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    box-shadow: 0 8px 12px rgba(0,0,0,0.25);
+  }
+  .card:hover {
+    transform: scale(1.07);
+    box-shadow: 0 15px 20px rgba(0,0,0,0.45);
+  }
+  .card span {
+    font-size: 54px;
+    display: block;
+    margin-bottom: 14px;
+    text-shadow: 1px 1px 3px #0c2f1f;
+  }
+  #gameArea, #gameAreaBalloon {
+    margin: 20px auto;
+    width: 340px;
+    height: 440px;
+    background: rgba(0, 0, 0, 0.28);
+    border-radius: 25px;
+    position: relative;
+    overflow: hidden;
+    box-shadow: inset 0 0 15px #0b3c1d;
+  }
+  #cat, #balloon {
+    position: absolute;
+    font-size: 54px;
+    cursor: pointer;
+    user-select: none;
+    text-shadow: 0 0 5px #ffffff80;
+  }
+  button {
+    margin-top: 18px;
+    background: rgba(255, 255, 255, 0.22);
+    border: 1.8px solid rgba(255, 255, 255, 0.38);
+    border-radius: 25px;
+    padding: 12px 30px;
+    color: #eafff2;
+    font-size: 20px;
+    cursor: pointer;
+    user-select: none;
+    font-weight: 600;
+    transition: background-color 0.35s ease, box-shadow 0.35s ease;
+    box-shadow: 0 5px 10px rgba(0,0,0,0.3);
+  }
+  button:hover {
+    background: rgba(255, 255, 255, 0.38);
+    box-shadow: 0 8px 15px rgba(0,0,0,0.5);
+  }
+  .gameover {
+    margin-top: 14px;
+    font-size: 22px;
+    color: #adf0b1;
+    text-shadow: 0 0 6px #90ee90;
+  }
+  /* Clover animation */
+  .clover {
+    position: fixed;
+    top: -40px;
+    font-size: 20px;
+    opacity: 0.5;
+    user-select: none;
+    pointer-events: none;
+    animation-name: fallRotate;
+    animation-timing-function: linear;
+    animation-iteration-count: infinite;
+    z-index: 5;
+  }
+  @keyframes fallRotate {
+    to {
+      transform: translateY(110vh) rotate(360deg);
+    }
+  }
+</style>
+</head>
+<body>
+
+<h1>🍀 Clover Game 🍀</h1>
+
+<!-- MENU -->
+<div id="menu" class="screen active">
+  <div class="cards">
+    <div class="card" id="startCat">
+      <span>🐱</span>Catch The Cat
+    </div>
+    <div class="card" id="startLuck">
+      <span>🍀</span>Luck Picker
+    </div>
+    <div class="card" id="startBalloon">
+      <span>🎈</span>Tap The Balloon
+    </div>
+  </div>
+</div>
+
+<!-- CAT GAME -->
+<div id="catGame" class="screen">
+  <h2>₍⸍⸌̣ʷ̣̫⸍̣⸌₎ Catch The Cat</h2>
+  <p>Tap kucing lucu ini sebelum kabur>_<!</p>
+  <div id="gameArea"></div>
+  <div id="catOver" class="gameover" style="display:none;">🐾 MeoOw!Kamu menang!</div>
+  <button id="backFromCat">Back to Menu</button>
+</div>
+
+<!-- LUCK GAME -->
+<div id="luckGame" class="screen">
+  <h2>🍀 Luck Picker</h2>
+  <p id="luckText">Klik tombol untuk ambil keberuntunganmu</p>
+  <button id="pickLuckBtn">Ambil keberuntungan</button>
+  <button id="backFromLuck">Back to Menu</button>
+</div>
+
+<!-- BALLOON GAME -->
+<div id="balloonGame" class="screen">
+  <h2>🎈 Tap The Balloon</h2>
+  <p>Tap balon ini sebelum pergi!</p>
+  <div id="gameAreaBalloon"></div>
+  <div id="balloonOver" class="gameover" style="display:none;">🎈 Pop! Gemes kan? ๑•͈ᴗ•͈๑</div>
+  <button id="backFromBalloon">Back to Menu</button>
+</div>
+
+<script>
+  // Buat clover animasi jatuh, random ukuran, kecepatan, delay
+  for (let i = 0; i < 40; i++) {
+    const c = document.createElement('div');
+    c.className = 'clover';
+    c.innerText = '🍀';
+    c.style.left = Math.random() * 100 + 'vw';
+    c.style.fontSize = (12 + Math.random() * 20) + 'px';
+    c.style.opacity = 0.3 + Math.random() * 0.5;
+    c.style.animationDuration = (4 + Math.random() * 8) + 's';
+    c.style.animationDelay = (Math.random() * 10) + 's';
+    document.body.appendChild(c);
+  }
+
+  // Hide semua layar
+  function hideAllScreens() {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  }
+
+  // Elements
+  const menu = document.getElementById('menu');
+  const catGame = document.getElementById('catGame');
+  const gameArea = document.getElementById('gameArea');
+  const catOver = document.getElementById('catOver');
+  const backFromCat = document.getElementById('backFromCat');
+
+  const luckGame = document.getElementById('luckGame');
+  const luckText = document.getElementById('luckText');
+  const pickLuckBtn = document.getElementById('pickLuckBtn');
+  const backFromLuck = document.getElementById('backFromLuck');
+
+  const balloonGame = document.getElementById('balloonGame');
+  const gameAreaBalloon = document.getElementById('gameAreaBalloon');
+  const balloonOver = document.getElementById('balloonOver');
+  const backFromBalloon = document.getElementById('backFromBalloon');
+
+  // Start Catch the Cat
+  document.getElementById('startCat').onclick = () => {
+    hideAllScreens();
+    catGame.classList.add('active');
+    startCatGame();
+  };
+
+  // Start Luck Picker
+  document.getElementById('startLuck').onclick = () => {
+    hideAllScreens();
+    luckGame.classList.add('active');
+    luckText.textContent = 'Klik tombol untuk ambil keberuntunganmu';
+  };
+
+  // Start Tap the Balloon
+  document.getElementById('startBalloon').onclick = () => {
+    hideAllScreens();
+    balloonGame.classList.add('active');
+    startBalloonGame();
+  };
+
+  // Back buttons
+  backFromCat.onclick = () => {
+    hideAllScreens();
+    menu.classList.add('active');
+    cleanupCatGame();
+  };
+  backFromLuck.onclick = () => {
+    hideAllScreens();
+    menu.classList.add('active');
+  };
+  backFromBalloon.onclick = () => {
+    hideAllScreens();
+    menu.classList.add('active');
+    cleanupBalloonGame();
+  };
+
+  // Catch the Cat logic
+  let cat, catMoveInterval;
+
+  function startCatGame() {
+    gameArea.innerHTML = '';
+    catOver.style.display = 'none';
+
+    cat = document.createElement('div');
+    cat.id = 'cat';
+    cat.textContent = '🐱';
+    cat.style.position = 'absolute';
+    gameArea.appendChild(cat);
+
+    moveCat();
+    catMoveInterval = setInterval(moveCat, 700);
+
+    cat.onclick = () => {
+      clearInterval(catMoveInterval);
+      cat.remove();
+      catOver.style.display = 'block';
+    };
+  }
+
+  function moveCat() {
+    const maxX = gameArea.clientWidth - 50;
+    const maxY = gameArea.clientHeight - 50;
+    const x = Math.random() * maxX;
+    const y = Math.random() * maxY;
+    cat.style.left = x + 'px';
+    cat.style.top = y + 'px';
+  }
+
+  function cleanupCatGame() {
+    clearInterval(catMoveInterval);
+    if (cat) cat.remove();
+    catOver.style.display = 'none';
+  }
+
+  // Luck picker logic
+  const luckMessages = [
+    '🍀 Hari ini kamu beruntung',
+    '🌱 Pelan-pelan tapi pasti',
+    '💚 Semesta lagi baik ke kamu',
+    '🍃 Kamu ga sendirian, semangat!',
+    '✨ Keberuntungan sedang di jalan',
+  ];
+
+  pickLuckBtn.onclick = () => {
+    const idx = Math.floor(Math.random() * luckMessages.length);
+    luckText.textContent = luckMessages[idx];
+  };
+
+  // Balloon game logic
+  let balloon;
+
+  function startBalloonGame() {
+    gameAreaBalloon.innerHTML = '';
+    balloonOver.style.display = 'none';
+
+    balloon = document.createElement('div');
+    balloon.id = 'balloon';
+    balloon.textContent = '🎈';
+    balloon.style.position = 'absolute';
+    balloon.style.bottom = '-60px';
+    balloon.style.left = Math.random() * (gameAreaBalloon.clientWidth - 50) + 'px';
+
+    gameAreaBalloon.appendChild(balloon);
+
+    // animasi naik balon
+    balloon.animate(
+      [
+        { bottom: '-60px' },
+        { bottom: '460px' }
+      ],
+      {
+        duration: 4000,
+        iterations: 1,
+        easing: 'linear'
+      }
+    );
+
+    balloon.onclick = () => {
+      balloon.remove();
+      balloonOver.style.display = 'block';
+    };
+
+    setTimeout(() => {
+      if (balloon && balloon.parentElement) {
+        balloon.remove();
+        balloonOver.style.display = 'block';
+      }
+    }, 4000);
+  }
+
+  function cleanupBalloonGame() {
+    if (balloon) {
+      balloon.remove();
+      balloonOver.style.display = 'none';
+    }
+  }
+</script>
+
+</body>
+</html>
